@@ -2,8 +2,21 @@ version: '3.8'
 services:
   react-app:
     build: .
+    image: burpmaster:latest
     ports:
       - "8088:8088"
     environment:
       - NODE_ENV=production
+      # Add any runtime envs here if you switch to runtime config injection
+      # - REACT_APP_FIREBASE_API_KEY=${REACT_APP_FIREBASE_API_KEY}
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.9'
+          memory: 3G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+      restart_policy:
+        condition: on-failure

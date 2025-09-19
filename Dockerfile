@@ -1,26 +1,26 @@
-# Use official Node.js image
-FROM node:18-alpine
-
-# Set working directory
+# Multi-stage build: build with node, serve with nginx for high performance
+FROM node:18-alpine AS builder
 WORKDIR /app
 
-# Copy package.json and package-lock.json
+# Copy package files and install dependencies
 COPY package*.json ./
-
-# Install dependencies
 RUN npm install --legacy-peer-deps
 
-# Copy the rest of the app
+# Copy source and build
 COPY . .
-
-# Build the React app
 RUN npm run build
 
-# Install serve to serve the build
-RUN npm install -g serve
+# Production image: nginx serves static files
+FROM nginx:1.25-alpine
 
-# Expose port 8088
+# Copy custom nginx config
+COPY nginx/nginx.conf /etc/nginx/nginx.conf
+COPY nginx/default.conf /etc/nginx/conf.d/default.conf
+
+# Copy built assets from builder
+COPY --from=builder /app/build /usr/share/nginx/html
+
 EXPOSE 8088
 
-# Start the app
-CMD ["serve", "-s", "build", "-l", "8088"]
+# Use nginx in foreground
+CMD ["nginx", "-g", "daemon off;"]

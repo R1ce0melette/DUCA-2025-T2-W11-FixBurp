@@ -6,7 +6,7 @@ import { loginUser } from '../services/authService';
 // Login page component for existing users. Integrates with Firebase Auth.
 const Login = () => {
   const [formData, setFormData] = useState({
-    email: '',
+    username: '',
     password: ''
   });
   const [loading, setLoading] = useState(false);
@@ -26,13 +26,13 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     // Validate that both fields are filled
-    if (!formData.email || !formData.password) {
+    if (!formData.username || !formData.password) {
       setError('Please fill in all fields');
       return;
     }
     setLoading(true); // Show loading spinner
     // Call loginUser from authService to sign in with Firebase
-    const result = await loginUser(formData.email, formData.password);
+    const result = await loginUser(formData.username, formData.password);
     if (result.success) {
       // On success, redirect to home page
       navigate('/home');

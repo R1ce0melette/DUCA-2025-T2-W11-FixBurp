@@ -6,9 +6,7 @@ import { registerUser } from '../services/authService';
 // Registration page component for new users. Integrates with Firebase Auth and Firestore.
 const Register = () => {
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
+    username: '',
     password: '',
     confirmPassword: ''
   });
@@ -27,7 +25,7 @@ const Register = () => {
 
   // Validate form fields before submitting
   const validateForm = () => {
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password || !formData.confirmPassword) {
+    if (!formData.username || !formData.password || !formData.confirmPassword) {
       setError('Please fill in all fields');
       return false;
     }
@@ -50,7 +48,11 @@ const Register = () => {
     }
     setLoading(true); // Show loading spinner
     // Call registerUser from authService to create user in Firebase
-    const result = await registerUser(formData);
+    const payload = {
+      username: formData.username,
+      password: formData.password
+    };
+    const result = await registerUser(payload);
     if (result.success) {
       // On success, redirect to login page with a message
       navigate('/login', {
@@ -81,36 +83,13 @@ const Register = () => {
                   <p>{error}</p>
                 </Message>
               )}
-              <Form.Group widths="equal">
-                <Form.Input
-                  fluid
-                  icon="user"
-                  iconPosition="left"
-                  placeholder="First Name"
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleChange}
-                  required
-                />
-                <Form.Input
-                  fluid
-                  icon="user"
-                  iconPosition="left"
-                  placeholder="Last Name"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  required
-                />
-              </Form.Group>
               <Form.Input
                 fluid
-                icon="mail"
+                icon="user"
                 iconPosition="left"
-                placeholder="Email address"
-                name="email"
-                type="email"
-                value={formData.email}
+                placeholder="Username"
+                name="username"
+                value={formData.username}
                 onChange={handleChange}
                 required
               />

@@ -24,25 +24,33 @@ export const verifyPassword = async (password, hashedPassword) => {
 // Registers a new user with Firebase Auth and stores additional info in Firestore
 export const registerUser = async (userData) => {
   try {
-    const { email, password, firstName, lastName } = userData;
-    
+    // Expect username and password. We'll map username -> username@local.dev
+    const { username, password } = userData;
+
+    // Basic username validation: 3-30 chars, letters, numbers, underscores, hyphens
+    const usernameRegex = /^[a-zA-Z0-9_-]{3,30}$/;
+    if (!username || !usernameRegex.test(username)) {
+      return { success: false, error: 'Invalid username. Use 3-30 letters, numbers, _ or -.' };
+    }
+
+    const email = `${username}@local.dev`;
+
     // Create user in Firebase Authentication
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
-    
+
     // Hash the password before saving to Firestore (extra security)
     const hashedPassword = await hashPassword(password);
-    
+
     // Store user profile in Firestore under 'users' collection
     await setDoc(doc(db, 'users', user.uid), {
-      firstName,
-      lastName,
+      username,
       email,
       password: hashedPassword, // Store hashed password
       createdAt: new Date().toISOString(),
       uid: user.uid
     });
-    
+
     return { success: true, user };
   } catch (error) {
     // Return error message if registration fails
@@ -51,23 +59,26 @@ export const registerUser = async (userData) => {
 };
 
 // Logs in a user using Firebase Authentication
-export const loginUser = async (email, password) => {
+export const loginUser = async (username, password) => {
   try {
+    // Map username to synthetic email
+    const email = username.includes('@') ? username : `${username}@local.dev`;
+
     // Attempt to sign in with email and password
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     return { success: true, user: userCredential.user };
   } catch (error) {
     // Handle common Firebase Auth errors
     let errorMessage = 'Login failed. Please check your credentials.';
-    
+
     if (error.code === 'auth/user-not-found') {
-      errorMessage = 'No account found with this email address.';
+      errorMessage = 'No account found with this username.';
     } else if (error.code === 'auth/wrong-password') {
       errorMessage = 'Invalid password.';
     } else if (error.code === 'auth/invalid-email') {
-      errorMessage = 'Invalid email address.';
+      errorMessage = 'Invalid username.';
     }
-    
+
     return { success: false, error: errorMessage };
   }
 };
